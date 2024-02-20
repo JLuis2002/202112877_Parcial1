@@ -1,0 +1,84 @@
+import psycopg2
+from datetime import datetime
+
+# Conexión a la base de datos
+connection = psycopg2.connect(
+    host= "localhost",
+    user= "postgres",
+    password="Rufo2002",
+    database="Problema2_Parcial1_0980"
+)
+
+def listar_tareas():
+    try:
+        cursor = connection.cursor()
+        cursor.execute("SELECT * FROM tareas")
+        tareas = cursor.fetchall()
+        if not tareas:
+            print("No hay tareas.")
+        else:
+            print("Lista de tareas:")
+            for tarea in tareas:
+                tarea_info = f"ID: {tarea[0]}, Nombre: {tarea[1]}, Descripción: {tarea[2]}, Fecha de vencimiento: {tarea[3]}, Completada: {tarea[4]}"
+                print(tarea_info)
+    except Exception as ex:
+        print("Error al listar tareas:", ex)
+
+def agregar_tarea():
+    nombre = input("Ingrese el nombre de la tarea: ")
+    descripcion = input("Ingrese la descripción de la tarea (opcional): ")
+    fecha_vencimiento = input("Ingrese la fecha de vencimiento de la tarea en formato YYYY-MM-DD (opcional): ")
+    fecha_vencimiento = convertir_fecha(fecha_vencimiento)
+    try:
+        cursor = connection.cursor()
+        cursor.execute("INSERT INTO tareas(nombre, descripcion, fecha_vencimiento) VALUES (%s, %s, %s)",
+                       (nombre, descripcion, fecha_vencimiento))
+        connection.commit()
+        print("Tarea agregada correctamente.")
+    except Exception as ex:
+        print("Error al agregar tarea:", ex)
+
+def marcar_completada():
+    id_tarea = int(input("Ingrese el ID de la tarea a marcar como completada: "))
+    try:
+        cursor = connection.cursor()
+        cursor.execute("UPDATE tareas SET completada = TRUE WHERE id = %s", (id_tarea,))
+        connection.commit()
+        print("Tarea marcada como completada correctamente.")
+    except Exception as ex:
+        print("Error al marcar tarea como completada:", ex)
+
+def convertir_fecha(fecha_str):
+    if fecha_str:
+        return datetime.strptime(fecha_str, "%Y-%m-%d").date()
+    else:
+        return None
+
+def menu():
+    print("Seleccione una opción:")
+    print("1. Ver lista de tareas")
+    print("2. Agregar tarea")
+    print("3. Marcar tarea como completada")
+    print("4. Salir")
+
+    opcion = input("Ingrese el número de la opción deseada: ")
+    return opcion
+
+# Ejecución del programa
+while True:
+    opcion = menu()
+    
+    if opcion == "1":
+        listar_tareas()
+    elif opcion == "2":
+        agregar_tarea()
+    elif opcion == "3":
+        marcar_completada()
+    elif opcion == "4":
+        print("Saliendo del programa.")
+        break
+    else:
+        print("Opción no válida. Por favor, seleccione una opción válida.")
+
+# Cierre de la conexión a la base de datos
+connection.close()
